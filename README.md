@@ -41,8 +41,8 @@
 
 ```bash
 # 1. 克隆仓库并进入工程
-git clone https://github.com/Anlon-27/vibe-knowledge-video.git
-cd vibe-knowledge-video
+git clone https://github.com/Anlon-27/vibe-video-studio.git
+cd vibe-video-studio
 
 # 2. 安装 Python 核心依赖与渲染内核浏览器
 pip install -r requirements.txt
@@ -129,7 +129,7 @@ python3 scripts/qa_check.py episodes/gambler/dist/gambler_v1_久赌必输的数�
 ## 📁 仓库结构
 
 ```
-vibe-knowledge-video/
+vibe-video-studio/
 ├── SKILL.md                    # 技能主文件：V2.1 规格 + 动效铁律 + 六阶装甲叙事
 ├── AGENTS.md                   # 通用 AI 入口指令（Codex/Cursor/Trae/Gemini 自动识别）
 ├── CLAUDE.md                   # 平台指导规则与技术契约说明

@@ -1,4 +1,4 @@
-# AGENTS.md — vibe-knowledge-video 通用 Agent 指令 (V2.1)
+# AGENTS.md — vibe-video-studio 通用 Agent 指令 (V2.1)
 
 > 本文件是给 AI 编程助手（OpenAI Codex / Gemini CLI / Jules / Cursor / Trae 等）看的入口指令。
 > 这些工具会自动读取仓库根目录的 `AGENTS.md` 并遵守其中约定。

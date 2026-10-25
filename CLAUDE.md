@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目性质
 
-这是一个 AI Agent 技能仓库（vibe-knowledge-video）：把硬知识做成「Vibe知识大赏」风格的电影感短视频（1920×1080 / 30fps、无配音、中文主句 + 英文斜体双语字幕、纯代码生成）。没有构建系统和单元测试；"代码"是静态 HTML Canvas 页面（单文件或模块化均可）+ Python/ffmpeg 渲染脚本，验证手段是抽帧预览和 `qa_check.py`。
+这是一个 AI Agent 技能仓库（vibe-video-studio）：把硬知识做成「Vibe知识大赏」风格的电影感短视频（1920×1080 / 30fps、无配音、中文主句 + 英文斜体双语字幕、纯代码生成）。没有构建系统和单元测试；"代码"是静态 HTML Canvas 页面（单文件或模块化均可）+ Python/ffmpeg 渲染脚本，验证手段是抽帧预览和 `qa_check.py`。
 
 与用户交流用中文，代码注释用中文。
 

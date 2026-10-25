@@ -1,5 +1,5 @@
 ---
-name: vibe-knowledge-video
+name: vibe-video-studio
 description: "Vibe知识大赏风格 AI 知识视频制作流水线——把数学/概率/哲学/计算机等硬知识拍成电影感短视频。逆向工程自抖音 @Iwanau/@Juno/叁号暗房 的 Claude Opus 5.5 代码生成视频系列。包含 RTX GPU D3D11 硬件光栅化多进程并发、NVENC 硬件压制、Canvas 活态物理动力学引擎、六阶工业级装甲叙事、抖音全案文案与置顶评论发布 SOP。"
 version: "2.1.0"
 author: "anran"

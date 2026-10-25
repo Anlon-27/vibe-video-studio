@@ -21,15 +21,15 @@
 ## 用法一：Codex CLI（开箱即用）
 
 ```bash
-git clone https://gitee.com/x2576080434/vibe-knowledge-video.git
-cd vibe-knowledge-video
+git clone https://github.com/Anlon-27/vibe-video-studio.git
+cd vibe-video-studio
 codex "用这个仓库的技能，做一条《辛普森悖论》的知识视频"
 ```
 
 Codex 会自动读取仓库根的 `AGENTS.md`：先装依赖，再按 `SKILL.md` 的七步流程走，需要你确认剧本分镜后开始渲染。GitHub 源同理：
 
 ```bash
-git clone https://github.com/Anlon-27/vibe-knowledge-video.git
+git clone https://github.com/Anlon-27/vibe-video-studio.git
 ```
 
 > 首次使用建议先跑一次环境准备（见 `AGENTS.md` 里的安装命令），避免沙箱联网装依赖超时。
