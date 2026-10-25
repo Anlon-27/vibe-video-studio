@@ -1,0 +1,29 @@
+# 渲染中间产物
+temp/
+out_frames/
+frames/
+*.png.tmp
+
+# 抽帧预览图（每一期 preview/ 与根目录临时预览）
+preview/
+/*.jpg
+/*.jpeg
+/*.png
+
+# 音频/视频产物（大文件不入库；sfx.wav 由 assets/sfx.json 经 make_sfx.py 生成，cue 表才入库）
+*.mp3
+*.wav
+*.mp4
+!docs/**/*.mp4
+
+# 系统文件
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+
+# 渲染产物及测试临时文件
+episodes/*/dist/*.mp4
+episodes/*/assets/*.wav
+test_silent.wav
+*.render.json

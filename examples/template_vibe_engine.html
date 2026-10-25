@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  Vibe知识大赏 · 标准生产模板 (Live Mathematical Dynamics Engine V2.0)
+  规格: 1920x1080 / 30fps / 纯代码驱动 / 零配音纯BGM / 活态动效
+-->
+<title>Vibe知识大赏 · 标准模板</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700;900&family=EB+Garamond:ital@0;1&family=JetBrains+Mono:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #060512; font-family: 'Noto Serif SC', 'STSong', serif; }
+  #stage { position: relative; width: 1920px; height: 1080px; background: #060512; }
+  .layer { position: absolute; inset: 0; }
+  #bg { z-index: 1; } #scene { z-index: 10; }
+
+  /* 1. 作者水印 (全片恒定) */
+  #watermark { position: absolute; top: 40px; left: 56px; z-index: 30;
+    font: 600 24px 'Noto Sans SC', sans-serif; color: rgba(234,234,242,.55); letter-spacing: 2px; }
+
+  /* 2. 顶部场景/阶段标签 */
+  #toplabel { position: absolute; top: 40px; left: 0; right: 0; z-index: 30;
+    text-align: center; font: 600 28px 'Noto Serif SC', serif; color: #EDE4D3; letter-spacing: 4px; }
+
+  /* 3. 画面注释 (y ≈ 70%) */
+  #annotation { position: absolute; top: 765px; left: 0; right: 0; z-index: 30;
+    text-align: center; font: 400 24px 'Noto Serif SC', serif; color: #9A9AB0; }
+
+  /* 4. 双语旁白字幕带 (y ≈ 85-91%) */
+  #subtitle-box { position: absolute; top: 885px; left: 0; right: 0; z-index: 40;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  .sub-pill { background: rgba(10, 8, 18, 0.90); border: 1px solid rgba(120, 115, 150, 0.45);
+    border-radius: 16px; padding: 12px 42px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.75); }
+  #subtitle { font: 700 40px 'Noto Serif SC', serif; color: #EAEAF2; letter-spacing: 1px; }
+  #subtitle em { font-style: normal; color: #C9A96A; }
+  #subtitle-en { font: italic 400 22px 'EB Garamond', serif; color: #A0A0BA; letter-spacing: 0.5px; }
+
+  /* 5. 标题卡 (15-22s 标配) */
+  #titlecard { position: absolute; inset: 0; z-index: 50; display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 24px; background: rgba(5,4,12,0.95); }
+  #titlecard .series { font: 500 26px 'Noto Sans SC', sans-serif; color: rgba(201,169,106,.85); letter-spacing: 14px; text-indent: 14px; }
+  #titlecard .name   { font: 900 110px 'Noto Serif SC', serif; color: #C9A96A; letter-spacing: 6px;
+    text-shadow: 0 4px 40px rgba(201,169,106,.3); }
+  #titlecard .q      { font: 600 34px 'Noto Serif SC', serif; color: #EAEAF2; margin-top: 10px; letter-spacing: 2px; }
+  #titlecard .q-en   { font: italic 400 24px 'EB Garamond', serif; color: #9A9AB0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" class="layer" width="1920" height="1080"></canvas>
+  <canvas id="scene" class="layer" width="1920" height="1080"></canvas>
+  <div id="watermark">@anran</div>
+  <div id="toplabel"></div>
+  <div id="annotation"></div>
+  <div id="subtitle-box">
+    <div class="sub-pill" id="sub-pill" style="opacity: 0;">
+      <div id="subtitle"></div>
+      <div id="subtitle-en"></div>
+    </div>
+  </div>
+  <div id="titlecard">
+    <div class="series">VIBE 知识大赏</div>
+    <div class="name">《主标题名称》</div>
+    <div class="q">核心问题探究与反直觉假设？</div>
+    <div class="q-en">Core Question and Counter-Intuitive Scientific Hypothesis</div>
+  </div>
+</div>
+
+<script>
+/* ================= 配置与章节数据 ================= */
+const CFG = { duration: 160.0, fps: 30, accent: '#C9A96A', ink: '#EAEAF2', dim: '#8A8AA0' };
+const TITLE_CARD = [16.0, 22.0];
+
+const SECTIONS = [
+  [0.0,   '阶段 0 · 开场钩子与常识颠覆', '反直觉认知实验'],
+  [22.0,  '阶段 1 · 核心数学模型建立', '经典学术论文推演'],
+  [70.0,  '阶段 2 · 工业级深层机制展开', '高能网络拓扑结构'],
+  [120.0, '阶段 3 · 现实博弈与经济学落点', '人性机制与利益分配'],
+  [145.0, '终局 · 哲学审视与认知收敛', '在被完全度量的世界里保持清醒']
+];
+
+const SUBTITLES = [
+  [1.0, 5.0, '开场第一句旁白：颠覆常识的钩子现象。', 'The opening hook that challenges everyday common sense.'],
+  [22.5, 27.0, '进入第一阶段：用严谨的数学公式击破表象。', 'Entering stage one: breaking appearances with rigorous mathematics.'],
+  [145.0, 158.0, '结尾哲学金句：保持对现实的独立思考。', 'Closing philosophical punchline: preserving independent thought.']
+];
+
+/* ================= 辅助函数与动画物理算子 ================= */
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+function easeInOut(t){ return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; }
+function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
+
+// 物理欠阻尼衰减振荡模型 (用于天平、摆锤、指针、碰撞)
+function dampedOscillation(t, decayRate=1.5, freq=8.0){
+  return Math.exp(-t * decayRate) * Math.sin(t * freq);
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ================= 背景层绘制 ================= */
+const bgc = document.getElementById('bg').getContext('2d');
+function drawBackground(t){
+  bgc.clearRect(0,0,1920,1080);
+  const g = bgc.createRadialGradient(960, 480, 50, 960, 480, 1150);
+  g.addColorStop(0, '#0F0D24');
+  g.addColorStop(0.6, '#080716');
+  g.addColorStop(1, '#03020A');
+  bgc.fillStyle = g;
+  bgc.fillRect(0,0,1920,1080);
+}
+
+/* ================= 场景主动效绘制 (必须随时间持续运动) ================= */
+const scc = document.getElementById('scene').getContext('2d');
+function drawScene(t){
+  scc.clearRect(0,0,1920,1080);
+
+  // 示例：卡片 + 阻尼震颤 + 活态滚轮
+  const cardX = 300, cardY = 240, cardW = 600, cardH = 460;
+  scc.save();
+  scc.fillStyle = 'rgba(18, 16, 28, 0.95)';
+  scc.strokeStyle = '#5F587D'; scc.lineWidth = 2.5;
+  roundRect(scc, cardX, cardY, cardW, cardH, 18);
+  scc.fill(); scc.stroke();
+
+  // 1. 动态滚动计数器
+  const progress = clamp(t / 3.0, 0, 1);
+  const liveCount = (10.0 + (96.4 - 10.0) * easeOut(progress)).toFixed(1);
+  scc.fillStyle = '#C9A96A'; scc.font = "700 36px 'JetBrains Mono', monospace";
+  scc.fillText(`Metric: ${liveCount}%`, cardX + 40, cardY + 80);
+
+  // 2. 卡片内部文字右对齐安全锚定 (防止压边溢出)
+  scc.textAlign = 'right';
+  scc.fillStyle = '#F08080'; scc.font = "600 20px 'Noto Serif SC', serif";
+  scc.fillText('右对齐安全边距展示 (Safe Margin)', cardX + cardW - 30, cardY + 140);
+
+  scc.restore();
+}
+
+/* ================= 核心无状态驱动器 window.render(t) ================= */
+window.render = function(t){
+  drawBackground(t);
+  drawScene(t);
+
+  // 更新 HUD 顶部标签与注释
+  let curTop = '', curAnn = '';
+  for (const s of SECTIONS){ if (t >= s[0]){ curTop = s[1]; curAnn = s[2]; } }
+  document.getElementById('toplabel').textContent = curTop;
+  document.getElementById('annotation').textContent = curAnn;
+
+  // 标题卡显隐控制 (16-22s)
+  const isTitle = (t >= TITLE_CARD[0] && t < TITLE_CARD[1]);
+  document.getElementById('titlecard').style.display = isTitle ? 'flex' : 'none';
+
+  // 双语字幕动态匹配与呼吸淡入
+  let curSub = null;
+  for (const sub of SUBTITLES){ if (t >= sub[0] && t < sub[1]){ curSub = sub; break; } }
+  const pill = document.getElementById('sub-pill');
+  if (curSub && !isTitle){
+    pill.style.opacity = '1';
+    document.getElementById('subtitle').innerHTML = curSub[2];
+    document.getElementById('subtitle-en').textContent = curSub[3];
+  } else {
+    pill.style.opacity = '0';
+  }
+};
+
+// 默认首帧初始化
+window.render(0.0);
+</script>
+</body>
+</html>

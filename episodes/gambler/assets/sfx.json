@@ -1,0 +1,26 @@
+{
+  "duration": 160.0,
+  "bpm": 112.90,
+  "bar0": 0.228,
+  "masterPeakDb": -6.0,
+  "cues": [
+    { "type": "page_turn",      "at": { "bar": 0,  "beat": 0.2 }, "gain": -14, "pan": -0.15 },
+    { "type": "click",          "at": { "bar": 2,  "beat": 0.0 }, "gain": -15, "pan": -0.25 },
+    { "type": "click",          "at": { "bar": 4,  "beat": 0.0 }, "gain": -15, "pan": -0.20 },
+    { "type": "reverse_whoosh", "at": { "bar": 8,  "beat": 0.0 }, "align": "end", "gain": -11, "pan": 0.0 },
+    { "type": "impact",         "at": { "bar": 8,  "beat": 0.0 }, "gain": -8,  "pan": 0.0 },
+    { "type": "whoosh",         "at": { "bar": 11, "beat": 0.0 }, "gain": -12, "pan": 0.1 },
+    { "type": "stamp",          "at": { "bar": 15, "beat": 0.0 }, "gain": -11, "pan": -0.15 },
+    { "type": "chime",          "at": { "bar": 19, "beat": 0.0 }, "gain": -13, "pan": 0.15 },
+    { "type": "whoosh",         "at": { "bar": 24, "beat": 0.0 }, "gain": -11, "pan": -0.1 },
+    { "type": "thump",          "at": { "bar": 27, "beat": 0.0 }, "gain": -12, "pan": 0.2 },
+    { "type": "descend",        "at": { "bar": 33, "beat": 0.0 }, "gain": -13, "pan": 0.15 },
+    { "type": "riser",          "at": { "bar": 43, "beat": 0.0 }, "gain": -10, "pan": 0.0 },
+    { "type": "impact",         "at": { "bar": 44, "beat": 0.0 }, "gain": -7,  "pan": 0.0 },
+    { "type": "tick_run",       "at": { "bar": 48, "beat": 0.0 }, "gain": -14, "pan": -0.2 },
+    { "type": "whoosh",         "at": { "bar": 56, "beat": 0.0 }, "gain": -12, "pan": 0.0 },
+    { "type": "chime",          "at": { "bar": 62, "beat": 0.0 }, "gain": -13, "pan": 0.2 },
+    { "type": "breath",         "at": { "bar": 71, "beat": 0.0 }, "gain": -12, "pan": 0.0 },
+    { "type": "chime",          "at": { "bar": 72, "beat": 0.0 }, "gain": -14, "pan": 0.0 }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "video": "C:\\Users\\Administrator\\Desktop\\项目\\ai-video-studio\\episodes\\gambler\\dist\\gambler_v1_久赌必输的数学.mp4",
+  "checkedAt": "2026-10-25T09:37:05+08:00",
+  "spec": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30",
+    "duration": 160.0,
+    "hasAudio": true
+  },
+  "visual": {
+    "darkRatio": 0.9363489583333333,
+    "subtitleBandRate": 0.9125,
+    "changeMean": 2.653337663436996,
+    "samples": 80
+  },
+  "subtitle": {
+    "ocrChecked": 0,
+    "ocrRead": 0,
+    "skipped": true,
+    "reason": "tesseract 未安装，OCR 项跳过"
+  },
+  "audio": {
+    "peak": 1.3115346431732178,
+    "rms": 0.2803380489349365,
+    "clipRatio": 1.417233560090703e-07
+  },
+  "issues": [
+    "[节奏] 相邻 2 秒帧差异过低——存在长时间静止画面（规范: 每 2-4 秒必须有新元素）",
+    "[音频] 存在削波（爆音）——降低合成音量或加软限幅"
+  ],
+  "passed": false
+}

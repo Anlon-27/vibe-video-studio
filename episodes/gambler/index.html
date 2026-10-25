@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Vibe知识大赏 · 《久赌必输的数学》</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;600;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #04030A;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'Microsoft YaHei', serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+  }
+
+  #stage-container {
+    position: relative; width: 1920px; height: 1080px;
+    background: #060512;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
+    transform-origin: center center;
+  }
+  #stage {
+    position: absolute; inset: 0; width: 1920px; height: 1080px;
+    overflow: hidden;
+  }
+  .layer { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+  #bg    { z-index: 1; }
+  #scene { z-index: 10; }
+
+  /* 1. 左上角恒定作者水印 */
+  #watermark {
+    position: absolute; top: 38px; left: 56px; z-index: 30;
+    font: 600 23px 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: rgba(238, 238, 246, 0.56);
+    letter-spacing: 2px;
+    pointer-events: none;
+  }
+
+  /* 2. 顶部金色章节标签 */
+  #toplabel {
+    position: absolute; top: 38px; left: 0; right: 0; z-index: 30;
+    text-align: center;
+    font: 700 26px 'Noto Serif SC', 'Source Han Serif SC', 'Microsoft YaHei', serif;
+    color: #EDE3CE;
+    letter-spacing: 3.5px;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+
+  /* 3. 学术文献注释带 (y ≈ 808px) */
+  #note {
+    position: absolute; top: 808px; left: 0; right: 0; z-index: 30;
+    text-align: center;
+    font: italic 500 19px 'EB Garamond', 'Noto Serif SC', 'Georgia', serif;
+    color: #9E9EB8;
+    letter-spacing: 0.6px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+  }
+
+  /* 4. 双语旁白字幕胶囊框 (y ≈ 880px，强制单行不折行) */
+  #sub {
+    position: absolute; top: 880px; left: 0; right: 0; z-index: 40;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .sub-pill {
+    background: rgba(9, 8, 18, 0.92);
+    border: 1px solid rgba(217, 185, 120, 0.38);
+    border-radius: 16px;
+    padding: 13px 44px;
+    max-width: 1760px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.82);
+  }
+  #sub-zh {
+    font: 700 35px 'Noto Serif SC', 'Source Han Serif SC', 'Microsoft YaHei', serif;
+    color: #F2F0EA;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+  }
+  #sub-zh em {
+    font-style: normal;
+    color: #E2BE78;
+    padding: 0 3px;
+  }
+  #sub-en {
+    font: italic 400 21px 'EB Garamond', 'Georgia', 'Times New Roman', serif;
+    color: #A8A8C2;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  /* 5. 标题卡 (bar(8)=17.234s -> bar(11)=23.612s) */
+  #titlecard {
+    position: absolute; inset: 0; z-index: 50; display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 22px;
+    background: radial-gradient(circle at 50% 46%, rgba(20, 17, 38, 0.96), rgba(5, 4, 12, 0.98));
+  }
+  #titlecard .series {
+    font: 600 24px 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    color: rgba(217, 185, 120, 0.88);
+    letter-spacing: 14px; text-indent: 14px;
+  }
+  #titlecard .name {
+    font: 900 106px 'Noto Serif SC', 'Source Han Serif SC', 'Microsoft YaHei', serif;
+    color: #D9B978;
+    letter-spacing: 6px;
+    text-shadow: 0 6px 42px rgba(217, 185, 120, 0.35);
+  }
+  #titlecard .rule {
+    width: 480px; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(217,185,120,0.75), transparent);
+  }
+  #titlecard .q {
+    font: 600 33px 'Noto Serif SC', 'Source Han Serif SC', 'Microsoft YaHei', serif;
+    color: #F0EEE8; margin-top: 6px; letter-spacing: 2px;
+  }
+  #titlecard .q-en {
+    font: italic 400 23px 'EB Garamond', 'Georgia', serif;
+    color: #9E9EB8;
+  }
+
+  /* 交互预览控制栏 (渲染模式下自动隐藏) */
+  #player-controls {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 100;
+    width: 92%; max-width: 1460px;
+    background: rgba(16, 14, 28, 0.90);
+    border: 1px solid rgba(217, 185, 120, 0.35);
+    border-radius: 14px; padding: 10px 22px;
+    display: flex; align-items: center; gap: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+  }
+  .ctrl-btn {
+    background: #242038; color: #EDE4D3;
+    border: 1px solid #5A5378; border-radius: 8px;
+    padding: 6px 12px;
+    font: 600 14px 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .ctrl-btn:hover { background: #D9B978; color: #060512; }
+  #timeline {
+    flex: 1; -webkit-appearance: none; appearance: none; height: 8px;
+    background: #2D2744; border-radius: 4px; outline: none; cursor: pointer;
+  }
+  #timeline::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #D9B978; cursor: pointer; border: 2px solid #FFF;
+  }
+  #time-display {
+    font: 700 15px 'JetBrains Mono', 'Consolas', monospace;
+    color: #58D8C0; min-width: 125px; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="stage-container">
+  <div id="stage">
+    <canvas id="bg" class="layer" width="3840" height="2160"></canvas>
+    <canvas id="scene" class="layer" width="3840" height="2160"></canvas>
+    <div id="watermark">@anran</div>
+    <div id="toplabel"></div>
+    <div id="note"></div>
+    <div id="sub" style="opacity: 0;">
+      <div class="sub-pill">
+        <div id="sub-zh"></div>
+        <div id="sub-en"></div>
+      </div>
+    </div>
+    <div id="titlecard">
+      <div class="series">VIBE 知识大赏 · PROBABILITY THEORY</div>
+      <div class="name">《久赌必输的数学》</div>
+      <div class="rule"></div>
+      <div class="q">为什么只要你不离场，哪怕胜率 50% 也会倾家荡产？</div>
+      <div class="q-en">The Mathematics of Gambler’s Ruin, Volatility Drag &amp; the Kelly Criterion</div>
+    </div>
+  </div>
+
+  <!-- 实时交互预览控制栏 -->
+  <div id="player-controls">
+    <button class="ctrl-btn" id="btn-play">▶ 播放</button>
+    <button class="ctrl-btn" onclick="seek(0)">0s 序幕</button>
+    <button class="ctrl-btn" onclick="seek(17.3)">17s 标题</button>
+    <button class="ctrl-btn" onclick="seek(24.0)">24s 吸收壁</button>
+    <button class="ctrl-btn" onclick="seek(54.0)">54s 波动率税</button>
+    <button class="ctrl-btn" onclick="seek(94.0)">94s 千人仿真</button>
+    <button class="ctrl-btn" onclick="seek(122.0)">122s 凯利公式</button>
+    <button class="ctrl-btn" onclick="seek(152.0)">152s 终局</button>
+    <input type="range" id="timeline" min="0" max="160" step="0.05" value="0">
+    <div id="time-display">00:00 / 02:40</div>
+    <audio id="bgm" src="../../assets/audio/MidnightRush(旋律很哇塞)-云杪栖光.mp3" preload="auto"></audio>
+    <audio id="sfx" preload="auto"></audio>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="core.js"></script>
+<script src="sim.js"></script>
+<script src="scenes.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

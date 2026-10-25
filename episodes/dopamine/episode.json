@@ -1,0 +1,15 @@
+{
+  "slug": "dopamine",
+  "title": "休息的假象",
+  "version": 1,
+  "status": "active",
+  "duration": 160.0,
+  "fps": 30,
+  "template": "assets/template.html",
+  "publishDoc": "publish/douyin/dopamine.md",
+  "bgm": "assets/audio/MidnightRush(旋律很哇塞)-云杪栖光.mp3",
+  "sfx": "episodes/dopamine/assets/sfx.wav",
+  "supersedes": null,
+  "supersededBy": null,
+  "createdAt": "2026-10-23"
+}

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  Vibe知识大赏 · 标准生产模板 (Live Mathematical Dynamics Engine V2.0)
+  ======================================================================
+  规格: 1920×1080 / 严格 30fps / 160.0s (4800帧) / 纯代码驱动 / 零配音纯BGM
+  底色: 深蓝黑渐变 #0F0D24 -> #080716 -> #03020A
+  水印: @anran | 年份: 2026
+  契约:
+    1. window.render(t) 纯时间函数驱动，画面仅由 t 决定，无帧间状态。
+    2. window.__RENDER_MODE__ = true 时停止原生 requestAnimationFrame 循环并隐藏播放控件。
+    3. 五区架构: 左上水印(@anran) / 顶标签带 / 中央动画区 / y70% 注释带 / y85-91% 胶囊双语字幕带。
+    4. 动效四大铁律: 欠阻尼物理运动、动态数值狂飙滚轮、活态分布波形脉冲、卡片边界安全锚定。
+    5. 右对齐法则: textAlign='right'，X 坐标锚定 cardX + cardWidth - safetyMargin (>=20px)。
+-->
+<title>Vibe知识大赏 · 《片名》</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700;900&family=EB+Garamond:ital@0;1&family=JetBrains+Mono:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden; background: #04030A;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif SC', 'STSong', serif;
+  }
+  #stage-container {
+    position: relative; width: 1920px; height: 1080px;
+    background: #060512; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    transform-origin: center center;
+  }
+  #stage {
+    position: absolute; inset: 0; width: 1920px; height: 1080px;
+    overflow: hidden;
+  }
+  .layer { position: absolute; inset: 0; }
+  #bg { z-index: 1; } #scene { z-index: 10; }
+
+  /* 1. 作者水印 (全片恒定) */
+  #watermark { position: absolute; top: 40px; left: 56px; z-index: 30;
+    font: 600 24px 'Noto Sans SC', sans-serif; color: rgba(234,234,242,.55); letter-spacing: 2px; }
+
+  /* 2. 顶部场景/阶段标签 */
+  #toplabel { position: absolute; top: 40px; left: 0; right: 0; z-index: 30;
+    text-align: center; font: 600 28px 'Noto Serif SC', serif; color: #EDE4D3; letter-spacing: 4px; }
+
+  /* 3. 画面注释 (y ≈ 70%) */
+  #annotation { position: absolute; top: 765px; left: 0; right: 0; z-index: 30;
+    text-align: center; font: 400 24px 'Noto Serif SC', serif; color: #9A9AB0; }
+
+  /* 4. 双语旁白字幕带 (y ≈ 85-91%) */
+  #subtitle-box { position: absolute; top: 885px; left: 0; right: 0; z-index: 40;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
+  .sub-pill { background: rgba(10, 8, 18, 0.90); border: 1px solid rgba(120, 115, 150, 0.45);
+    border-radius: 16px; padding: 12px 42px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.75); }
+  #subtitle { font: 700 38px 'Noto Serif SC', serif; color: #EAEAF2; letter-spacing: 1px; }
+  #subtitle em { font-style: normal; color: #C9A96A; }
+  #subtitle-en { font: italic 400 22px 'EB Garamond', serif; color: #A0A0BA; letter-spacing: 0.5px; }
+
+  /* 5. 标题卡 (16-22s 标配) */
+  #titlecard { position: absolute; inset: 0; z-index: 50; display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 24px; background: rgba(5,4,12,0.95); }
+  #titlecard .series { font: 500 26px 'Noto Sans SC', sans-serif; color: rgba(201,169,106,.85); letter-spacing: 14px; text-indent: 14px; }
+  #titlecard .name   { font: 900 110px 'Noto Serif SC', serif; color: #C9A96A; letter-spacing: 6px;
+    text-shadow: 0 4px 40px rgba(201,169,106,.3); }
+  #titlecard .q      { font: 600 34px 'Noto Serif SC', serif; color: #EAEAF2; margin-top: 10px; letter-spacing: 2px; }
+  #titlecard .q-en   { font: italic 400 24px 'EB Garamond', serif; color: #9A9AB0; }
+
+  /* 实时交互预览控制栏 (录屏渲染模式下会自动隐藏) */
+  #player-controls {
+    position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 100;
+    width: 90%; max-width: 1400px; background: rgba(18, 16, 28, 0.88);
+    border: 1px solid rgba(201, 169, 106, 0.35); border-radius: 14px;
+    padding: 10px 24px; display: flex; align-items: center; gap: 16px;
+    backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .ctrl-btn {
+    background: #262238; color: #EDE4D3; border: 1px solid #5F587D; border-radius: 8px;
+    padding: 6px 14px; font: 600 15px 'Noto Sans SC', sans-serif; cursor: pointer; transition: all .2s;
+  }
+  .ctrl-btn:hover { background: #C9A96A; color: #060512; }
+  #timeline {
+    flex: 1; -webkit-appearance: none; appearance: none; height: 8px;
+    background: #2D2744; border-radius: 4px; outline: none; cursor: pointer;
+  }
+  #timeline::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #C9A96A; cursor: pointer; border: 2px solid #FFF;
+  }
+  #time-display {
+    font: 700 16px 'JetBrains Mono', monospace; color: #4EE1A0; min-width: 130px; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="stage-container">
+  <div id="stage">
+    <canvas id="bg" class="layer" width="1920" height="1080"></canvas>
+    <canvas id="scene" class="layer" width="1920" height="1080"></canvas>
+    <div id="watermark">@anran</div>
+    <div id="toplabel"></div>
+    <div id="annotation"></div>
+    <div id="subtitle-box">
+      <div class="sub-pill" id="sub-pill" style="opacity: 0;">
+        <div id="subtitle"></div>
+        <div id="subtitle-en"></div>
+      </div>
+    </div>
+    <div id="titlecard">
+      <div class="series">VIBE 知识大赏</div>
+      <div class="name">《片名》</div>
+      <div class="q">核心问题探究与反直觉假设？</div>
+      <div class="q-en">Core Question and Counter-Intuitive Scientific Hypothesis</div>
+    </div>
+  </div>
+
+  <!-- 浏览器直接打开时的交互控制器 -->
+  <div id="player-controls">
+    <button class="ctrl-btn" id="btn-play">▶ 播放</button>
+    <button class="ctrl-btn" onclick="seek(0)">0s 开场</button>
+    <button class="ctrl-btn" onclick="seek(16)">16s 标题</button>
+    <button class="ctrl-btn" onclick="seek(22)">22s 机制</button>
+    <button class="ctrl-btn" onclick="seek(70)">70s 推演</button>
+    <button class="ctrl-btn" onclick="seek(120)">120s 博弈</button>
+    <button class="ctrl-btn" onclick="seek(145)">145s 终局</button>
+    <input type="range" id="timeline" min="0" max="160" step="0.05" value="0">
+    <div id="time-display">00:00 / 02:40</div>
+    <audio id="bgm" src="audio/MidnightRush(旋律很哇塞)-云杪栖光.mp3" preload="auto"></audio>
+    <audio id="sfx" preload="auto"></audio>
+  </div>
+</div>
+
+<script>
+/* ================= 配置与章节数据 ================= */
+const CFG = {
+  duration: 160.0, fps: 30,
+  // 可选语义音效：先生成 episodes/<slug>/assets/sfx.wav，再把这里改为 'assets/sfx.wav'
+  sfx: null,
+  accent: '#C9A96A', ink: '#EAEAF2', dim: '#8A8AA0',
+  red: '#D33828', green: '#38C172', blue: '#4A90E2', cyan: '#4EE1A0'
+};
+
+const TITLE_CARD = [16.0, 22.0];
+
+const SECTIONS = [
+  [0.0,   '阶段 0 · 开场钩子与常识颠覆', '反直觉认知实验'],
+  [22.0,  '阶段 1 · 核心数学模型建立', '经典学术论文推演'],
+  [70.0,  '阶段 2 · 工业级深层机制展开', '高能网络拓扑结构'],
+  [120.0, '阶段 3 · 现实博弈与经济学落点', '人性机制与利益分配'],
+  [145.0, '终局 · 哲学审视与认知收敛', '在被完全度量的世界里保持清醒']
+];
+
+/* 双语旁白字幕表: [起秒, 止秒, 中文(可用<em>强调</em>), 英文] */
+const SUBTITLES = [
+  [1.0, 5.0, '开场第一句旁白：颠覆常识的<em>钩子现象</em>。', 'The opening hook that challenges everyday common sense.'],
+  [5.5, 9.5, '当一切习以为常的规则，在数学显微镜下显出原形。', 'When everyday conventions reveal their true forms under mathematics.'],
+  [10.0, 15.0, '真正的秘密，往往隐藏在最不起眼的数据洪流中。', 'The deepest secrets often hide within unassuming streams of data.'],
+  [22.5, 27.0, '进入第一阶段：用严谨的数学公式击破表象。', 'Entering stage one: breaking appearances with rigorous mathematics.'],
+  [145.0, 158.0, '结尾哲学金句：保持对现实的独立思考。', 'Closing philosophical punchline: preserving independent thought.']
+];
+
+/* ================= 辅助函数与活态动画物理算子 ================= */
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+function lerp(a, b, t){ return a + (b - a) * t; }
+function easeInOut(t){ return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; }
+function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
+
+// 物理欠阻尼衰减振荡模型 (用于天平、摆锤、指针、碰撞)
+function dampedOscillation(t, decayRate=1.5, freq=8.0){
+  return Math.exp(-t * decayRate) * Math.sin(t * freq);
+}
+
+// 固定种子伪随机生成器 (确定性渲染铁律)
+function mulberry32(seed){
+  return function(){
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ================= 背景层绘制 (深蓝黑渐变 #0F0D24 -> #080716 -> #03020A + 暗星微闪) ================= */
+const bgc = document.getElementById('bg').getContext('2d');
+const bgRng = mulberry32(20261018);
+const BG_STARS = Array.from({length: 45}, () => ({
+  x: bgRng() * 1920, y: bgRng() * 1080, r: 0.6 + bgRng() * 1.2, speed: 0.5 + bgRng() * 1.5, phase: bgRng() * Math.PI * 2
+}));
+
+function drawBackground(t){
+  bgc.clearRect(0, 0, 1920, 1080);
+  const g = bgc.createRadialGradient(960, 480, 50, 960, 480, 1150);
+  g.addColorStop(0, '#0F0D24');
+  g.addColorStop(0.6, '#080716');
+  g.addColorStop(1, '#03020A');
+  bgc.fillStyle = g;
+  bgc.fillRect(0, 0, 1920, 1080);
+
+  // 背景暗星呼吸微动
+  for (const star of BG_STARS){
+    const alpha = 0.15 + 0.25 * Math.sin(t * star.speed + star.phase);
+    bgc.fillStyle = `rgba(180, 190, 230, ${Math.max(0, alpha)})`;
+    bgc.beginPath();
+    bgc.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+    bgc.fill();
+  }
+}
+
+/* ================= 场景主动效绘制 (必须随时间持续运动，不可静态静止 > 4s) ================= */
+const scc = document.getElementById('scene').getContext('2d');
+function drawScene(t){
+  scc.clearRect(0, 0, 1920, 1080);
+
+  // 示例展示：卡片 + 欠阻尼震颤 + 活态滚轮 + 安全边距右对齐
+  const cardX = 360, cardY = 240, cardW = 1200, cardH = 460;
+  scc.save();
+  scc.fillStyle = 'rgba(18, 16, 28, 0.95)';
+  scc.strokeStyle = '#5F587D'; scc.lineWidth = 2.5;
+  roundRect(scc, cardX, cardY, cardW, cardH, 18);
+  scc.fill(); scc.stroke();
+
+  // 1. 动态数值狂飙滚轮 (0 - 3s 内狂飙收敛)
+  const progress = clamp(t / 3.0, 0, 1);
+  const liveCount = (10.0 + (96.4 - 10.0) * easeOut(progress)).toFixed(1);
+  scc.fillStyle = '#C9A96A';
+  scc.font = "700 40px 'JetBrains Mono', monospace";
+  scc.textAlign = 'left';
+  scc.fillText(`实时指标预测率: ${liveCount}%`, cardX + 50, cardY + 90);
+
+  // 2. 欠阻尼物理运动展示 (平衡衰减振荡)
+  const osc = dampedOscillation(Math.max(0, t - 1.0), 1.2, 6.0);
+  const angle = osc * 0.15;
+  scc.save();
+  scc.translate(cardX + 200, cardY + 280);
+  scc.rotate(angle);
+  scc.strokeStyle = '#4EE1A0'; scc.lineWidth = 4;
+  scc.beginPath(); scc.moveTo(-100, 0); scc.lineTo(100, 0); scc.stroke();
+  scc.fillStyle = '#EDE4D3'; scc.font = "600 20px 'Noto Serif SC', serif";
+  scc.fillText('欠阻尼物理平衡杆', -80, -15);
+  scc.restore();
+
+  // 3. 卡片内部文字右对齐安全锚定 (Safe Margin Anchor Rule: >= 20px)
+  scc.textAlign = 'right';
+  scc.fillStyle = '#A0A0BA';
+  scc.font = "500 22px 'Noto Sans SC', sans-serif";
+  scc.fillText('右对齐安全边距锚定展示 (Safe Margin >= 20px)', cardX + cardW - 40, cardY + 90);
+
+  scc.restore();
+}
+
+/* ================= 核心无状态驱动器 window.render(t) (技术契约) ================= */
+window.render = function(t){
+  drawBackground(t);
+  drawScene(t);
+
+  // 1. 更新 HUD 顶部标签与画面注释
+  let curTop = '', curAnn = '';
+  for (const s of SECTIONS){
+    if (t >= s[0]){ curTop = s[1]; curAnn = s[2]; }
+  }
+  document.getElementById('toplabel').textContent = curTop;
+  document.getElementById('annotation').textContent = curAnn;
+
+  // 2. 标题卡显隐控制 (16.0 - 22.0s 标配)
+  const isTitle = (t >= TITLE_CARD[0] && t < TITLE_CARD[1]);
+  document.getElementById('titlecard').style.display = isTitle ? 'flex' : 'none';
+
+  // 3. 双语字幕动态匹配与胶囊框显示
+  let curSub = null;
+  for (const sub of SUBTITLES){
+    if (t >= sub[0] && t < sub[1]){ curSub = sub; break; }
+  }
+  const pill = document.getElementById('sub-pill');
+  if (curSub && !isTitle){
+    pill.style.opacity = '1';
+    document.getElementById('subtitle').innerHTML = curSub[2];
+    document.getElementById('subtitle-en').textContent = curSub[3];
+  } else {
+    pill.style.opacity = '0';
+  }
+
+  // 4. 预览控制条与时间 (渲染模式下自动隐藏)
+  if (window.__RENDER_MODE__) {
+    const ctrl = document.getElementById('player-controls');
+    if (ctrl) ctrl.style.display = 'none';
+  } else {
+    const tl = document.getElementById('timeline');
+    if (tl) tl.value = t;
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    const td = document.getElementById('time-display');
+    if (td) td.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} / 02:40`;
+  }
+};
+
+/* ================= 浏览器原生 60FPS 实时预览器 ================= */
+let currentTime = 0;
+let isPlaying = false;
+let lastTimestamp = null;
+const timeline = document.getElementById('timeline');
+const btnPlay = document.getElementById('btn-play');
+const bgmAudio = document.getElementById('bgm');
+const sfxAudio = document.getElementById('sfx');
+let sfxReady = false;
+
+if (CFG.sfx) {
+  sfxAudio.src = CFG.sfx;
+  sfxAudio.addEventListener('canplaythrough', () => {
+    sfxReady = true;
+    // 音效加载慢于用户点击时，补上起播与对齐
+    if (isPlaying) {
+      syncSfx();
+      sfxAudio.play().catch(()=>{});
+    }
+  }, { once: true });
+  sfxAudio.addEventListener('error', () => { sfxReady = false; });
+}
+
+function syncSfx(){
+  if (!sfxReady) return;
+  if (Math.abs(sfxAudio.currentTime - currentTime) > 0.08) sfxAudio.currentTime = currentTime;
+}
+
+function loop(timestamp){
+  // 严格技术契约: 若渲染器注入了 __RENDER_MODE__ 标志，立刻停止 rAF 预览循环
+  if (window.__RENDER_MODE__) return;
+
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const dt = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+
+  if (isPlaying) {
+    currentTime += dt;
+    if (currentTime >= CFG.duration) {
+      currentTime = CFG.duration;
+      pause();
+    }
+    window.render(currentTime);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function play(){
+  isPlaying = true;
+  lastTimestamp = null;
+  btnPlay.textContent = '⏸ 暂停';
+  bgmAudio.currentTime = currentTime;
+  bgmAudio.play().catch(()=>{});
+  if (sfxReady) {
+    syncSfx();
+    sfxAudio.play().catch(()=>{});
+  }
+}
+
+function pause(){
+  isPlaying = false;
+  btnPlay.textContent = '▶ 播放';
+  bgmAudio.pause();
+  if (sfxReady) sfxAudio.pause();
+}
+
+btnPlay.onclick = function(){
+  if (isPlaying) pause(); else play();
+};
+
+timeline.oninput = function(){
+  currentTime = parseFloat(this.value);
+  bgmAudio.currentTime = currentTime;
+  syncSfx();
+  window.render(currentTime);
+};
+
+window.seek = function(t){
+  currentTime = t;
+  timeline.value = t;
+  bgmAudio.currentTime = t;
+  syncSfx();
+  window.render(t);
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (isPlaying) pause(); else play();
+  }
+});
+
+// 默认首帧初始化
+window.render(0.0);
+</script>
+</body>
+</html>

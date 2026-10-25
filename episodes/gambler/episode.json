@@ -1,0 +1,15 @@
+{
+  "slug": "gambler",
+  "title": "久赌必输的数学",
+  "version": 1,
+  "status": "active",
+  "duration": 160.0,
+  "fps": 30,
+  "template": "assets/template.html",
+  "publishDoc": "publish/douyin/gambler.md",
+  "bgm": "assets/audio/MidnightRush(旋律很哇塞)-云杪栖光.mp3",
+  "sfx": "episodes/gambler/assets/sfx.wav",
+  "supersedes": null,
+  "supersededBy": null,
+  "createdAt": "2026-10-23"
+}

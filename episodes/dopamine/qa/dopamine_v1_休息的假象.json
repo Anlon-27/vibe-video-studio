@@ -1,0 +1,32 @@
+{
+  "video": "C:\\Users\\Administrator\\Desktop\\项目\\ai-video-studio\\episodes\\dopamine\\dist\\dopamine_v1_休息的假象.mp4",
+  "checkedAt": "2026-10-23T10:16:42+08:00",
+  "spec": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30",
+    "duration": 160.0,
+    "hasAudio": true
+  },
+  "visual": {
+    "darkRatio": 0.9419307484567903,
+    "subtitleBandRate": 0.9125,
+    "changeMean": 2.919634708548211,
+    "samples": 80
+  },
+  "subtitle": {
+    "ocrChecked": 0,
+    "ocrRead": 0,
+    "skipped": true,
+    "reason": "tesseract 未安装，OCR 项跳过"
+  },
+  "audio": {
+    "peak": 0.8916224837303162,
+    "rms": 0.28032025694847107,
+    "clipRatio": 0.0
+  },
+  "issues": [
+    "[节奏] 相邻 2 秒帧差异过低——存在长时间静止画面（规范: 每 2-4 秒必须有新元素）"
+  ],
+  "passed": false
+}
