@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  Vibe知识大赏 · 《“好的老师”：学术期权与画饼博弈论》
+  ======================================================================
+  规格: 1920×1080 / 严格 30fps / 80.0s (2400帧) / 纯代码驱动 / 自主配音与定制伴奏
+  底色: 深蓝黑渐变 #0F0D24 -> #080716 -> #03020A
+  五区架构: 左上水印 / 顶标签带 / 中央动画区 / y70% 注释带 / y85-91% 胶囊双语字幕带
+  动效四大铁律: 欠阻尼物理运动、动态数值狂飙滚轮、活态分布波形脉冲、卡片边界安全锚定
+-->
+<title>Vibe知识大赏 · 《“好的老师”与画饼博弈论》</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700;900&family=EB+Garamond:ital@0;1&family=JetBrains+Mono:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden; background: #04030A;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif SC', 'STSong', serif;
+  }
+  #stage-container {
+    position: relative; width: 1920px; height: 1080px;
+    background: #060512; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    transform-origin: center center;
+  }
+  #stage {
+    position: absolute; inset: 0; width: 1920px; height: 1080px;
+    overflow: hidden;
+  }
+  .layer { position: absolute; inset: 0; }
+  #bg { z-index: 1; } #scene { z-index: 10; }
+
+  /* 1. 作者水印 */
+  #watermark { position: absolute; top: 40px; left: 56px; z-index: 30;
+    font: 600 24px 'Noto Sans SC', sans-serif; color: rgba(234,234,242,.55); letter-spacing: 2px; }
+
+  /* 2. 顶部场景/阶段标签 */
+  #toplabel { position: absolute; top: 40px; left: 0; right: 0; z-index: 30;
+    text-align: center; font: 600 28px 'Noto Serif SC', serif; color: #EDE4D3; letter-spacing: 4px; }
+
+  /* 3. 画面学术注释 (y ≈ 765px) */
+  #annotation { position: absolute; top: 765px; left: 0; right: 0; z-index: 30;
+    text-align: center; font: 400 24px 'Noto Serif SC', serif; color: #9A9AB0; }
+
+  /* 4. 双语旁白字幕带 (y ≈ 885px) */
+  #subtitle-box { position: absolute; top: 885px; left: 0; right: 0; z-index: 40;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
+  .sub-pill { background: rgba(10, 8, 18, 0.92); border: 1px solid rgba(120, 115, 150, 0.45);
+    border-radius: 16px; padding: 12px 42px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.75); }
+  #subtitle { font: 700 38px 'Noto Serif SC', serif; color: #EAEAF2; letter-spacing: 1px; }
+  #subtitle em { font-style: normal; color: #C9A96A; }
+  #subtitle-en { font: italic 400 22px 'EB Garamond', serif; color: #A0A0BA; letter-spacing: 0.5px; }
+
+  /* 5. 标题卡 (13.5 - 19.5s) */
+  #titlecard { position: absolute; inset: 0; z-index: 60; display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 24px; background: #060512; }
+  #titlecard .series { font: 500 26px 'Noto Sans SC', sans-serif; color: rgba(201,169,106,.85); letter-spacing: 14px; text-indent: 14px; }
+  #titlecard .name   { font: 900 100px 'Noto Serif SC', serif; color: #C9A96A; letter-spacing: 6px;
+    text-shadow: 0 4px 40px rgba(201,169,106,.3); text-align: center; }
+  #titlecard .q      { font: 600 32px 'Noto Serif SC', serif; color: #EAEAF2; margin-top: 10px; letter-spacing: 2px; text-align: center; }
+  #titlecard .q-en   { font: italic 400 24px 'EB Garamond', serif; color: #9A9AB0; text-align: center; }
+
+  /* 实时交互预览控制栏 */
+  #player-controls {
+    position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 100;
+    width: 90%; max-width: 1400px; background: rgba(18, 16, 28, 0.88);
+    border: 1px solid rgba(201, 169, 106, 0.35); border-radius: 14px;
+    padding: 10px 24px; display: flex; align-items: center; gap: 16px;
+    backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .ctrl-btn {
+    background: #262238; color: #EDE4D3; border: 1px solid #5F587D; border-radius: 8px;
+    padding: 6px 14px; font: 600 15px 'Noto Sans SC', sans-serif; cursor: pointer; transition: all .2s;
+  }
+  .ctrl-btn:hover { background: #C9A96A; color: #060512; }
+  #timeline {
+    flex: 1; -webkit-appearance: none; appearance: none; height: 8px;
+    background: #2D2744; border-radius: 4px; outline: none; cursor: pointer;
+  }
+  #timeline::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: #C9A96A; cursor: pointer; border: 2px solid #FFF;
+  }
+  #time-display {
+    font: 700 16px 'JetBrains Mono', monospace; color: #4EE1A0; min-width: 130px; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="stage-container">
+  <div id="stage">
+    <canvas id="bg" class="layer" width="1920" height="1080"></canvas>
+    <canvas id="scene" class="layer" width="1920" height="1080"></canvas>
+    <div id="watermark">@vibe_video_studio</div>
+    <div id="toplabel"></div>
+    <div id="annotation"></div>
+    <div id="subtitle-box">
+      <div class="sub-pill" id="sub-pill" style="opacity: 0;">
+        <div id="subtitle"></div>
+        <div id="subtitle-en"></div>
+      </div>
+    </div>
+    <div id="titlecard">
+      <div class="series">VIBE 知识大赏</div>
+      <div class="name">《“好的老师”与画饼博弈论》</div>
+      <div class="q">为什么无抵押的远期承诺，往往是最昂贵的年轻借贷？</div>
+      <div class="q-en">Why uncollateralized long-term promises become the most expensive trap.</div>
+    </div>
+  </div>
+
+  <div id="player-controls">
+    <button class="ctrl-btn" id="btn-play">▶ 播放</button>
+    <button class="ctrl-btn" onclick="seek(0)">0s 开场</button>
+    <button class="ctrl-btn" onclick="seek(13.5)">14s 标题</button>
+    <button class="ctrl-btn" onclick="seek(19.5)">20s 画饼</button>
+    <button class="ctrl-btn" onclick="seek(47.0)">47s 博弈</button>
+    <button class="ctrl-btn" onclick="seek(63.0)">63s 止损</button>
+    <button class="ctrl-btn" onclick="seek(72.0)">72s 终局</button>
+    <input type="range" id="timeline" min="0" max="80" step="0.05" value="0">
+    <div id="time-display">00:00 / 01:20</div>
+    <audio id="bgm" src="assets/master_soundtrack.wav" preload="auto"></audio>
+  </div>
+</div>
+
+<script>
+/* ================= 配置与章节数据 ================= */
+const CFG = {
+  duration: 80.0, fps: 30,
+  watermark: '@vibe_video_studio',
+  accent: '#C9A96A', ink: '#EAEAF2', dim: '#8A8AA0',
+  red: '#E04A3F', green: '#38C172', blue: '#4A90E2', cyan: '#4EE1A0'
+};
+
+const TITLE_CARD = [13.5, 19.5];
+
+const SECTIONS = [
+  [0.0,   '阶段 0 · 微信聊天泡与服从反射', '心理学行为定式：秒回“好的老师”背后的权力级差'],
+  [19.5,  '阶段 1 · 四大经典“画饼期权”精算', '无抵押承诺：项目署名、高薪工作、老家人脉与大厂实习'],
+  [47.0,  '阶段 2 · 委托-代理人困境与双曲折现', '博弈论机制：导师边际成本归零与学生的沉没青春'],
+  [63.0,  '阶段 3 · 贝叶斯后验与理性止损', '决策科学：建立基于兑现增量的停止准则 (Stopping Rule)'],
+  [72.0,  '终局 · 哲学审视与认知收敛', '拒绝向虚无期权借贷，守住人生的沉没成本边界']
+];
+
+/* 双语旁白字幕表: [起秒, 止秒, 中文(可用<em>强调</em>), 英文] */
+const SUBTITLES = [
+  [0.8, 3.5, '学生：<em>“好的老师，收到！”</em>', 'Student: "Yes, Professor. Received!"'],
+  [3.5, 7.2, '在整个研究生与职场生涯中，这句话你可能不自觉地说过<em>上千次</em>。', 'Throughout academia and early career, you repeat this phrase a thousand times.'],
+  [7.2, 11.2, '从行为心理学来看，秒回好的不是敬业，而是大脑面对权力级差的<em>服从防御反射</em>。', 'Replying instantly is an amygdala compliance reflex under hierarchical pressure.'],
+  [11.2, 13.5, '因为在这四个字背后，紧接着一个经典博弈陷阱——<em>导师的远期画饼</em>。', 'Behind these four words lies an ancient game-theory trap: empty future promises.'],
+  
+  [19.8, 23.5, '导师：<em>“这个国家级重大项目我挂你的名字，好好做！”</em>', 'Mentor: "I will put your name on this national key grant. Work hard!"'],
+  [23.5, 27.0, '学术期权精算：实际排在<em>第八作者</em>，附赠报销票据整理工时 <em>400 小时</em>。', 'Actuarial audit: 8th co-author plus 400 hours of invoicing paperwork.'],
+  
+  [27.0, 31.0, '导师：<em>“你不读博也可以，去工业界我打个招呼，起码年薪20万以上！”</em>', 'Mentor: "Even without a PhD, I can get you an industry job making 200k+!"'],
+  [31.0, 34.8, '博弈现实：这只是为了以<em>最低边际成本</em>，将廉价劳动力扣在实验室延毕半年。', 'Game reality: binding cheap intellectual labor for another delayed semester.'],
+  
+  [34.8, 38.8, '导师：<em>“你老家省厅院所里我认识好几个核心领导，到时候直接帮你安排。”</em>', 'Mentor: "I have elite connections in your hometown. I will set you up."'],
+  [38.8, 42.5, '心理学定式：远期无抵押的人情信用，本质是<em>沉没成本极高</em>的无息借贷。', 'Cognitive truth: uncollateralized social promises are zero-cost leverage.'],
+  
+  [42.5, 46.5, '导师：<em>“下半年给你推顶尖大厂实习！下周先把这几篇材料改出来。”</em>', 'Mentor: "I will refer you to top internships next term! Finish this first."'],
+  [46.5, 50.0, '著名的<em>“下周复下周”</em>：通过不断移动时间锚点，榨取当下的即时生产力。', 'The moving goalpost fallacy: constantly extending horizons to extract labor.'],
+  
+  [50.0, 56.5, '在经济学中，这被称为典型的<em>委托-代理人困境</em>：导师成本为零，而你的代价是沉没青春。', 'Economics: Principal-Agent asymmetry where the mentor risks nothing.'],
+  [56.5, 63.5, '心理学<em>双曲折现</em>让你为了渺茫的虚幻未来，主动放弃当下的理性止损权。', 'Hyperbolic discounting compels you to forfeit current rights for illusory gains.'],
+  
+  [63.5, 71.5, '破解画饼的唯一法则，是建立<em>贝叶斯止损边界</em>：只看兑现的增量，不信口头的期权。', 'The only antidote: a Bayesian stop-loss boundary based on concrete evidence.'],
+  [71.5, 79.5, '所有无需抵押的远期前途，本质上都在<em>向你的年轻无息借贷</em>。真正的尊重，始于清醒止损。', 'All uncollateralized promises are unbacked loans on your youth. Respect begins with stopping.']
+];
+
+/* ================= 辅助函数与活态动画物理算子 ================= */
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+function lerp(a, b, t){ return a + (b - a) * t; }
+function easeInOut(t){ return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; }
+function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
+
+function dampedOscillation(t, decayRate=1.8, freq=7.0){
+  return Math.exp(-t * decayRate) * Math.sin(t * freq);
+}
+
+function mulberry32(seed){
+  return function(){
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ================= 背景层绘制 ================= */
+const bgc = document.getElementById('bg').getContext('2d');
+const bgRng = mulberry32(20261026);
+const BG_STARS = Array.from({length: 50}, () => ({
+  x: bgRng() * 1920, y: bgRng() * 1080, r: 0.6 + bgRng() * 1.4, speed: 0.6 + bgRng() * 1.6, phase: bgRng() * Math.PI * 2
+}));
+
+function drawBackground(t){
+  bgc.clearRect(0, 0, 1920, 1080);
+  const g = bgc.createRadialGradient(960, 480, 60, 960, 480, 1180);
+  g.addColorStop(0, '#0F0D24');
+  g.addColorStop(0.65, '#080716');
+  g.addColorStop(1, '#03020A');
+  bgc.fillStyle = g;
+  bgc.fillRect(0, 0, 1920, 1080);
+
+  // 背景暗星呼吸微动
+  for (const star of BG_STARS){
+    const alpha = 0.15 + 0.3 * Math.sin(t * star.speed + star.phase);
+    bgc.fillStyle = `rgba(180, 195, 235, ${Math.max(0, alpha)})`;
+    bgc.beginPath();
+    bgc.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+    bgc.fill();
+  }
+}
+
+/* ================= 中央活态场景绘制 ================= */
+const scc = document.getElementById('scene').getContext('2d');
+
+function drawScene(t){
+  scc.clearRect(0, 0, 1920, 1080);
+
+  if (t < 13.5) {
+    // 【阶段 0】：微信气泡秒回与服从反射模拟 (0.0s - 13.5s)
+    drawWeChatComplianceScene(t);
+  } else if (t >= 13.5 && t < 19.5) {
+    // 标题卡期间画布净空
+  } else if (t >= 19.5 && t < 47.0) {
+    // 【阶段 1】：四大画饼期权拆解 (19.5s - 47.0s)
+    drawPieOptionsScene(t);
+  } else if (t >= 47.0 && t < 63.0) {
+    // 【阶段 2】：委托-代理人天平与双曲折现 (47.0s - 63.0s)
+    drawPrincipalAgentScale(t);
+  } else if (t >= 63.0 && t < 72.0) {
+    // 【阶段 3】：贝叶斯后验与止损边界 (63.0s - 72.0s)
+    drawBayesianStopLoss(t);
+  } else {
+    // 【终局】：哲学金句与认知收敛 (72.0s - 80.0s)
+    drawPhilosophyOutro(t);
+  }
+}
+
+/* 1. 微信气泡与服从反射场景 */
+function drawWeChatComplianceScene(t){
+  const cardX = 380, cardY = 160, cardW = 1160, cardH = 560;
+  
+  // 背景卡片
+  scc.save();
+  scc.fillStyle = 'rgba(15, 13, 26, 0.94)';
+  scc.strokeStyle = '#4F4770'; scc.lineWidth = 2.5;
+  roundRect(scc, cardX, cardY, cardW, cardH, 20);
+  scc.fill(); scc.stroke();
+
+  // 微信顶部栏拟真
+  scc.fillStyle = 'rgba(25, 22, 38, 0.9)';
+  roundRect(scc, cardX, cardY, cardW, 64, 20);
+  scc.fill();
+  scc.fillStyle = '#EAEAF2'; scc.font = "600 22px 'Noto Sans SC', sans-serif";
+  scc.fillText('导师 (课题组负责人)', cardX + 50, cardY + 40);
+  scc.fillStyle = '#38C172'; scc.font = "700 16px 'JetBrains Mono', monospace";
+  scc.fillText('[ 在线 · 实时监视 ]', cardX + cardW - 200, cardY + 40);
+
+  // 1. 导师消息气泡 (左侧白灰底)
+  const mentorAlpha = clamp(t / 0.5, 0, 1);
+  scc.globalAlpha = mentorAlpha;
+  scc.fillStyle = 'rgba(40, 36, 60, 0.95)';
+  scc.strokeStyle = 'rgba(100, 95, 130, 0.4)'; scc.lineWidth = 1.5;
+  roundRect(scc, cardX + 50, cardY + 95, 800, 75, 14);
+  scc.fill(); scc.stroke();
+  scc.fillStyle = '#EDE4D3'; scc.font = "500 24px 'Noto Sans SC', sans-serif";
+  scc.fillText('小李，手头有个重大项目和几个远期前途，下午来办公室一趟。', cardX + 75, cardY + 142);
+
+  // 2. 学生秒回微信气泡 (右侧高亮绿底)
+  if (t >= 0.8) {
+    const studentT = t - 0.8;
+    const osc = dampedOscillation(studentT, 2.5, 12.0);
+    const bubbleScale = 1.0 + osc * 0.08;
+    
+    scc.save();
+    scc.translate(cardX + cardW - 50, cardY + 205);
+    scc.scale(bubbleScale, bubbleScale);
+    scc.fillStyle = '#2BA245'; // 微信经典绿
+    roundRect(scc, -380, 0, 380, 72, 14);
+    scc.fill();
+    scc.fillStyle = '#FFFFFF'; scc.font = "700 26px 'Noto Sans SC', sans-serif";
+    scc.fillText('好的老师，收到！', -350, 45);
+    scc.restore();
+  }
+
+  // 3. 神经恐惧防御指数仪表盘 (右侧狂飙滚轮)
+  scc.globalAlpha = 1.0;
+  const reflexT = clamp((t - 1.2) / 3.0, 0, 1);
+  const reflexSpeed = (12.4 + (98.6 - 12.4) * easeOut(reflexT)).toFixed(1);
+  const replyDelay = (0.95 - (0.95 - 0.18) * easeOut(reflexT)).toFixed(2);
+
+  // 仪表框
+  scc.fillStyle = 'rgba(20, 17, 34, 0.85)';
+  scc.strokeStyle = '#C9A96A'; scc.lineWidth = 2;
+  roundRect(scc, cardX + 50, cardY + 310, 1060, 210, 16);
+  scc.fill(); scc.stroke();
+
+  scc.fillStyle = '#C9A96A'; scc.font = "700 22px 'Noto Sans SC', sans-serif";
+  scc.fillText('【行为神经经济学检测】 权力级差反射模型 (Amygdala Reflex Model)', cardX + 80, cardY + 350);
+
+  // 滚轮指标 1
+  scc.fillStyle = '#EAEAF2'; scc.font = "500 20px 'Noto Sans SC', sans-serif";
+  scc.fillText('秒回延迟时间:', cardX + 80, cardY + 410);
+  scc.fillStyle = '#4EE1A0'; scc.font = "900 42px 'JetBrains Mono', monospace";
+  scc.fillText(`${replyDelay}s`, cardX + 240, cardY + 418);
+  scc.fillStyle = '#9A9AB0'; scc.font = "400 16px 'Noto Sans SC', sans-serif";
+  scc.fillText('(本能无思考跳过皮层决断)', cardX + 380, cardY + 410);
+
+  // 滚轮指标 2
+  scc.fillStyle = '#EAEAF2'; scc.font = "500 20px 'Noto Sans SC', sans-serif";
+  scc.fillText('杏仁核恐惧防御度:', cardX + 80, cardY + 475);
+  scc.fillStyle = '#E04A3F'; scc.font = "900 42px 'JetBrains Mono', monospace";
+  scc.fillText(`${reflexSpeed}%`, cardX + 280, cardY + 483);
+  scc.fillStyle = '#9A9AB0'; scc.font = "400 16px 'Noto Sans SC', sans-serif";
+  scc.fillText('(服从防御反射激活，心理防线归零)', cardX + 440, cardY + 475);
+
+  scc.restore();
+}
+
+/* 2. 四大画饼期权拆解场景 */
+function drawPieOptionsScene(t){
+  const cardX = 360, cardY = 150, cardW = 1200, cardH = 580;
+  scc.save();
+
+  // 卡片容器
+  scc.fillStyle = 'rgba(15, 13, 26, 0.95)';
+  scc.strokeStyle = '#5F587D'; scc.lineWidth = 2.5;
+  roundRect(scc, cardX, cardY, cardW, cardH, 20);
+  scc.fill(); scc.stroke();
+
+  // 顶部导航 TAB
+  const tabs = [
+    { name: "饼一·国家级重大项目", range: [19.5, 26.5] },
+    { name: "饼二·年薪20W+与不读博", range: [26.5, 34.0] },
+    { name: "饼三·老家关系网人脉", range: [34.0, 41.5] },
+    { name: "饼四·大厂顶尖实习", range: [41.5, 47.0] }
+  ];
+
+  tabs.forEach((tab, idx) => {
+    const isAct = t >= tab.range[0] && t < tab.range[1];
+    const tx = cardX + 40 + idx * 280;
+    scc.fillStyle = isAct ? '#C9A96A' : 'rgba(40, 36, 60, 0.7)';
+    roundRect(scc, tx, cardY + 25, 260, 48, 10);
+    scc.fill();
+    scc.fillStyle = isAct ? '#060512' : '#9A9AB0';
+    scc.font = isAct ? "700 18px 'Noto Sans SC', sans-serif" : "500 16px 'Noto Sans SC', sans-serif";
+    scc.textAlign = 'center';
+    scc.fillText(tab.name, tx + 130, cardY + 56);
+  });
+  scc.textAlign = 'left';
+
+  // 内部精算展示区
+  if (t < 26.5) {
+    // 饼一：项目署名 vs 400h 贴发票
+    scc.fillStyle = '#EDE4D3'; scc.font = "700 28px 'Noto Serif SC', serif";
+    scc.fillText('【口头承诺】：国家级重点研发计划 · “挂你名字，核心骨干”', cardX + 60, cardY + 130);
+    
+    // 期权折算对比卡
+    const localT = clamp((t - 19.8) / 2.0, 0, 1);
+    const authorRank = Math.min(8, Math.floor(1 + 7 * easeOut(localT)));
+    const paperHours = Math.floor(20 + 380 * easeOut(localT));
+
+    scc.fillStyle = 'rgba(28, 24, 44, 0.9)';
+    roundRect(scc, cardX + 60, cardY + 160, 520, 350, 14);
+    roundRect(scc, cardX + 620, cardY + 160, 520, 350, 14);
+    scc.fill();
+
+    // 左侧：承诺幻影
+    scc.fillStyle = '#C9A96A'; scc.font = "700 22px 'Noto Sans SC', sans-serif";
+    scc.fillText('预期学术期权收益 (Phantom Value)', cardX + 90, cardY + 205);
+    scc.fillStyle = '#EDE4D3'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+    scc.fillText('· 国家重大专项申报书核心作者', cardX + 90, cardY + 260);
+    scc.fillText('· 学术声誉与基金背书', cardX + 90, cardY + 310);
+    scc.fillText('· 导师口头承诺期权预期: 100%', cardX + 90, cardY + 360);
+
+    // 右侧：现实折现
+    scc.fillStyle = '#E04A3F'; scc.font = "700 22px 'Noto Sans SC', sans-serif";
+    scc.fillText('学术现实清算 (Real Execution)', cardX + 650, cardY + 205);
+    scc.fillStyle = '#EAEAF2'; scc.font = "500 20px 'Noto Sans SC', sans-serif";
+    scc.fillText('最终实际作者位次:', cardX + 650, cardY + 260);
+    scc.fillStyle = '#E04A3F'; scc.font = "900 48px 'JetBrains Mono', monospace";
+    scc.fillText(`第 ${authorRank} 作者`, cardX + 850, cardY + 270);
+
+    scc.fillStyle = '#EAEAF2'; scc.font = "500 20px 'Noto Sans SC', sans-serif";
+    scc.fillText('贴发票与财务报销工时:', cardX + 650, cardY + 350);
+    scc.fillStyle = '#4EE1A0'; scc.font = "900 48px 'JetBrains Mono', monospace";
+    scc.fillText(`${paperHours} 小时`, cardX + 880, cardY + 360);
+
+  } else if (t < 34.0) {
+    // 饼二：保底年薪20万 vs 延毕劳动力
+    scc.fillStyle = '#EDE4D3'; scc.font = "700 28px 'Noto Serif SC', serif";
+    scc.fillText('【口头承诺】：不读博进工业界 · “我打个招呼，保底年薪20万+”', cardX + 60, cardY + 130);
+
+    const localT = clamp((t - 26.5) / 2.0, 0, 1);
+    const delayProb = (30.0 + 57.5 * easeOut(localT)).toFixed(1);
+
+    scc.fillStyle = 'rgba(28, 24, 44, 0.9)';
+    roundRect(scc, cardX + 60, cardY + 160, 1080, 350, 14);
+    scc.fill();
+
+    // 柱状剪刀差
+    scc.fillStyle = '#C9A96A'; scc.font = "700 22px 'Noto Sans SC', sans-serif";
+    scc.fillText('口头承诺薪资: 240,000 RMB / 年', cardX + 100, cardY + 210);
+    scc.fillStyle = '#38C172';
+    scc.fillRect(cardX + 100, cardY + 230, 400 * easeOut(localT), 36);
+
+    scc.fillStyle = '#E04A3F'; scc.font = "700 22px 'Noto Sans SC', sans-serif";
+    scc.fillText('实验室当前补贴: 800 RMB / 月', cardX + 100, cardY + 310);
+    scc.fillStyle = '#E04A3F';
+    scc.fillRect(cardX + 100, cardY + 330, 30, 36);
+
+    scc.fillStyle = '#EDE4D3'; scc.font = "600 22px 'Noto Sans SC', sans-serif";
+    scc.fillText('实际延期毕业风险概率:', cardX + 620, cardY + 230);
+    scc.fillStyle = '#E04A3F'; scc.font = "900 56px 'JetBrains Mono', monospace";
+    scc.fillText(`${delayProb}%`, cardX + 860, cardY + 242);
+    scc.fillStyle = '#9A9AB0'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+    scc.fillText('(导师以“项目未结题”为由无风险扣留劳动力半年)', cardX + 620, cardY + 310);
+
+  } else if (t < 41.5) {
+    // 饼三：老家关系网与人脉
+    scc.fillStyle = '#EDE4D3'; scc.font = "700 28px 'Noto Serif SC', serif";
+    scc.fillText('【口头承诺】：家乡省厅人脉 · “老家省里我认识核心领导，随时安排”', cardX + 60, cardY + 130);
+
+    // 虚假网络节点拓扑
+    const netT = (t - 34.0) * 1.5;
+    scc.fillStyle = 'rgba(28, 24, 44, 0.9)';
+    roundRect(scc, cardX + 60, cardY + 160, 1080, 350, 14);
+    scc.fill();
+
+    // 绘制中心学生节点与虚无导师关系线
+    const cx = cardX + 220, cy = cardY + 340;
+    scc.fillStyle = '#38C172'; scc.beginPath(); scc.arc(cx, cy, 26, 0, Math.PI*2); scc.fill();
+    scc.fillStyle = '#FFF'; scc.font = "700 16px 'Noto Sans SC', sans-serif"; scc.textAlign = 'center';
+    scc.fillText('你', cx, cy + 6);
+
+    // 导师节点
+    const mx = cx + 170, my = cy - 80;
+    scc.fillStyle = '#C9A96A'; scc.beginPath(); scc.arc(mx, my, 32, 0, Math.PI*2); scc.fill();
+    scc.fillStyle = '#060512'; scc.fillText('导师', mx, my + 6);
+    scc.strokeStyle = '#C9A96A'; scc.lineWidth = 3; scc.beginPath(); scc.moveTo(cx, cy); scc.lineTo(mx, my); scc.stroke();
+
+    // 老家虚化领导节点 (闪烁断裂虚线)
+    const leaderNodes = [
+      { x: mx + 160, y: my - 60, name: "省厅领导A" },
+      { x: mx + 170, y: my + 50, name: "某所所长B" },
+      { x: mx + 150, y: my + 130, name: "核心人脉C" }
+    ];
+    leaderNodes.forEach((ln, i) => {
+      const alpha = 0.2 + 0.3 * Math.sin(netT + i);
+      scc.strokeStyle = `rgba(224, 74, 63, ${alpha})`;
+      scc.setLineDash([8, 8]);
+      scc.beginPath(); scc.moveTo(mx, my); scc.lineTo(ln.x, ln.y); scc.stroke();
+      scc.setLineDash([]);
+
+      scc.fillStyle = `rgba(100, 90, 120, ${alpha})`;
+      scc.beginPath(); scc.arc(ln.x, ln.y, 22, 0, Math.PI*2); scc.fill();
+      scc.fillStyle = '#EAEAF2'; scc.font = "400 14px 'Noto Sans SC', sans-serif";
+      scc.fillText(ln.name, ln.x, ln.y + 40);
+    });
+
+    scc.textAlign = 'left';
+    scc.fillStyle = '#E04A3F'; scc.font = "700 24px 'Noto Sans SC', sans-serif";
+    scc.fillText('博弈本质：零边际成本人情杠杆', cardX + 660, cardY + 230);
+    scc.fillStyle = '#EDE4D3'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+    scc.fillText('· 导师兑现成本: 0 元 (口头空头支票)', cardX + 660, cardY + 280);
+    scc.fillText('· 违约惩罚: 0 (口头承诺无任何法律约束)', cardX + 660, cardY + 320);
+    scc.fillText('· 学生沉没代价: 数年无偿劳动与服从', cardX + 660, cardY + 360);
+
+  } else {
+    // 饼四：下半年推实习 vs 永远在下周
+    scc.fillStyle = '#EDE4D3'; scc.font = "700 28px 'Noto Serif SC', serif";
+    scc.fillText('【口头承诺】：推大厂顶尖实习 · “下半年一定安排，先把这篇改完”', cardX + 60, cardY + 130);
+
+    scc.fillStyle = 'rgba(28, 24, 44, 0.9)';
+    roundRect(scc, cardX + 60, cardY + 160, 1080, 350, 14);
+    scc.fill();
+
+    // 时间轴逃逸动画
+    const loopT = ((t - 41.5) * 1.2) % 3.0;
+    const shiftX = (loopT / 3.0) * 400;
+
+    scc.strokeStyle = '#4A90E2'; scc.lineWidth = 4;
+    scc.beginPath(); scc.moveTo(cardX + 120, cardY + 330); scc.lineTo(cardX + 960, cardY + 330); scc.stroke();
+
+    // 锚点 1: 当前
+    scc.fillStyle = '#38C172'; scc.beginPath(); scc.arc(cardX + 200, cardY + 330, 14, 0, Math.PI*2); scc.fill();
+    scc.fillStyle = '#FFF'; scc.font = "600 16px 'Noto Sans SC', sans-serif"; scc.textAlign = 'center';
+    scc.fillText('当前时间: 提交中期报告', cardX + 200, cardY + 375);
+
+    // 逃逸承诺目标
+    const targetX = cardX + 450 + shiftX;
+    scc.fillStyle = '#E04A3F'; scc.beginPath(); scc.arc(targetX, cardY + 330, 16, 0, Math.PI*2); scc.fill();
+    scc.fillStyle = '#C9A96A'; scc.font = "700 18px 'Noto Sans SC', sans-serif";
+    scc.fillText('“下周一定推进” → 永远逃逸', targetX, cardY + 290);
+
+    scc.textAlign = 'left';
+    scc.fillStyle = '#E04A3F'; scc.font = "700 24px 'Noto Sans SC', sans-serif";
+    scc.fillText('机制解构：时间折现锚点漂移 (Moving Goalpost Fallacy)', cardX + 120, cardY + 230);
+  }
+
+  scc.restore();
+}
+
+/* 3. 委托-代理人天平与双曲折现 (47.0s - 63.0s) */
+function drawPrincipalAgentScale(t){
+  const cardX = 360, cardY = 150, cardW = 1200, cardH = 580;
+  scc.save();
+  scc.fillStyle = 'rgba(15, 13, 26, 0.95)';
+  scc.strokeStyle = '#5F587D'; scc.lineWidth = 2.5;
+  roundRect(scc, cardX, cardY, cardW, cardH, 20);
+  scc.fill(); scc.stroke();
+
+  scc.fillStyle = '#C9A96A'; scc.font = "700 30px 'Noto Serif SC', serif";
+  scc.fillText('【核心博弈模型】：委托-代理人困境与极端风险不对称', cardX + 60, cardY + 70);
+
+  // 物理倾斜天平动画 (欠阻尼振荡)
+  const scaleT = Math.max(0, t - 47.0);
+  const osc = dampedOscillation(scaleT, 1.2, 5.0);
+  const tiltAngle = (22.0 + osc * 14.0) * (Math.PI / 180); // 右侧严重下沉
+
+  const pivotX = cardX + 380, pivotY = cardY + 340;
+
+  // 支架底座
+  scc.strokeStyle = '#5F587D'; scc.lineWidth = 5;
+  scc.beginPath();
+  scc.moveTo(pivotX, pivotY); scc.lineTo(pivotX - 60, pivotY + 140);
+  scc.moveTo(pivotX, pivotY); scc.lineTo(pivotX + 60, pivotY + 140);
+  scc.stroke();
+
+  // 旋转横梁
+  scc.save();
+  scc.translate(pivotX, pivotY);
+  scc.rotate(tiltAngle);
+
+  scc.strokeStyle = '#C9A96A'; scc.lineWidth = 6;
+  scc.beginPath(); scc.moveTo(-220, 0); scc.lineTo(220, 0); scc.stroke();
+
+  // 左托盘 (导师口头承诺: 趋于 0)
+  scc.strokeStyle = '#9A9AB0'; scc.lineWidth = 2;
+  scc.beginPath(); scc.moveTo(-220, 0); scc.lineTo(-220, 80); scc.stroke();
+  scc.fillStyle = '#4A90E2';
+  roundRect(scc, -280, 80, 120, 24, 6); scc.fill();
+  scc.fillStyle = '#FFF'; scc.font = "600 16px 'Noto Sans SC', sans-serif"; scc.textAlign = 'center';
+  scc.fillText('导师承诺: 0 kg', -220, 130);
+
+  // 右托盘 (学生沉没代价: 4200h 青春)
+  scc.beginPath(); scc.moveTo(220, 0); scc.lineTo(220, 80); scc.stroke();
+  scc.fillStyle = '#E04A3F';
+  roundRect(scc, 160, 80, 120, 48, 6); scc.fill();
+  scc.fillStyle = '#FFF'; scc.font = "700 16px 'Noto Sans SC', sans-serif";
+  scc.fillText('青春沉没成本: 1000kg', 220, 155);
+
+  scc.restore();
+
+  // 右侧学术解构看板
+  scc.textAlign = 'left';
+  scc.fillStyle = 'rgba(28, 24, 44, 0.9)';
+  roundRect(scc, cardX + 700, cardY + 120, 440, 410, 14);
+  scc.fill();
+
+  scc.fillStyle = '#E04A3F'; scc.font = "700 22px 'Noto Sans SC', sans-serif";
+  scc.fillText('风险不对称精算法则', cardX + 730, cardY + 165);
+
+  scc.fillStyle = '#EDE4D3'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+  scc.fillText('1. 边际发牌成本 (Marginal Cost):', cardX + 730, cardY + 215);
+  scc.fillStyle = '#4EE1A0'; scc.font = "700 20px 'JetBrains Mono', monospace";
+  scc.fillText('   MC(导师) ≈ 0', cardX + 730, cardY + 245);
+
+  scc.fillStyle = '#EDE4D3'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+  scc.fillText('2. 履约违约惩罚 (Default Penalty):', cardX + 730, cardY + 295);
+  scc.fillStyle = '#E04A3F'; scc.font = "700 20px 'JetBrains Mono', monospace";
+  scc.fillText('   Penalty = 0 (口头无凭据)', cardX + 730, cardY + 325);
+
+  scc.fillStyle = '#EDE4D3'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+  scc.fillText('3. 双曲折现衰减 (Hyperbolic):', cardX + 730, cardY + 375);
+  scc.fillStyle = '#C9A96A'; scc.font = "700 20px 'JetBrains Mono', monospace";
+  scc.fillText('   V = A / (1 + k·D) → 期望归零', cardX + 730, cardY + 405);
+
+  scc.restore();
+}
+
+/* 4. 贝叶斯后验与止损边界 (63.0s - 72.0s) */
+function drawBayesianStopLoss(t){
+  const cardX = 360, cardY = 150, cardW = 1200, cardH = 580;
+  scc.save();
+  scc.fillStyle = 'rgba(15, 13, 26, 0.95)';
+  scc.strokeStyle = '#38C172'; scc.lineWidth = 2.5;
+  roundRect(scc, cardX, cardY, cardW, cardH, 20);
+  scc.fill(); scc.stroke();
+
+  scc.fillStyle = '#38C172'; scc.font = "700 30px 'Noto Serif SC', serif";
+  scc.fillText('【破局解法】：贝叶斯后验概率更新与理性止损红线', cardX + 60, cardY + 70);
+
+  const localT = clamp((t - 63.5) / 3.0, 0, 1);
+  const probVal = (85.0 - (85.0 - 4.2) * easeOut(localT)).toFixed(1);
+
+  // 概率暴跌仪表
+  scc.fillStyle = 'rgba(28, 24, 44, 0.9)';
+  roundRect(scc, cardX + 60, cardY + 120, 520, 400, 14);
+  roundRect(scc, cardX + 620, cardY + 120, 520, 400, 14);
+  scc.fill();
+
+  // 左侧：承诺后验概率曲线
+  scc.fillStyle = '#EAEAF2'; scc.font = "600 22px 'Noto Sans SC', sans-serif";
+  scc.fillText('画饼兑现的真实贝叶斯后验概率:', cardX + 90, cardY + 175);
+  scc.fillStyle = '#E04A3F'; scc.font = "900 64px 'JetBrains Mono', monospace";
+  scc.fillText(`${probVal}%`, cardX + 90, cardY + 265);
+  scc.fillStyle = '#9A9AB0'; scc.font = "400 18px 'Noto Sans SC', sans-serif";
+  scc.fillText('每次“下周一定”未兑现，真实概率即折半暴跌', cardX + 90, cardY + 320);
+
+  // 止损红线
+  scc.strokeStyle = '#E04A3F'; scc.lineWidth = 3; scc.setLineDash([8, 6]);
+  scc.beginPath(); scc.moveTo(cardX + 90, cardY + 390); scc.lineTo(cardX + 530, cardY + 390); scc.stroke();
+  scc.setLineDash([]);
+  scc.fillStyle = '#E04A3F'; scc.font = "700 18px 'JetBrains Mono', monospace";
+  scc.fillText('--- 理性止损警戒线 (Stop-Loss Barrier: 15%) ---', cardX + 90, cardY + 420);
+
+  // 右侧：三大反制行动准则
+  scc.fillStyle = '#C9A96A'; scc.font = "700 24px 'Noto Sans SC', sans-serif";
+  scc.fillText('青年自救三大反制铁律 (Anti-PUA Rules)', cardX + 650, cardY + 175);
+
+  scc.fillStyle = '#EDE4D3'; scc.font = "600 20px 'Noto Sans SC', sans-serif";
+  scc.fillText('1. 承诺抵押化 (Collateralize)', cardX + 650, cardY + 235);
+  scc.fillStyle = '#9A9AB0'; scc.font = "400 17px 'Noto Sans SC', sans-serif";
+  scc.fillText('   凡承诺推荐信或作者位次，必须落实在邮件或开题报告。', cardX + 650, cardY + 268);
+
+  scc.fillStyle = '#EDE4D3'; scc.font = "600 20px 'Noto Sans SC', sans-serif";
+  scc.fillText('2. 拒绝无息借贷青春 (Zero Unbacked Loan)', cardX + 650, cardY + 325);
+  scc.fillStyle = '#9A9AB0'; scc.font = "400 17px 'Noto Sans SC', sans-serif";
+  scc.fillText('   不为无抵押的远期人情，投入超过当月额度的工时。', cardX + 650, cardY + 358);
+
+  scc.fillStyle = '#EDE4D3'; scc.font = "600 20px 'Noto Sans SC', sans-serif";
+  scc.fillText('3. 守住沉没成本 (Protect Sunk Cost)', cardX + 650, cardY + 415);
+  scc.fillStyle = '#9A9AB0'; scc.font = "400 17px 'Noto Sans SC', sans-serif";
+  scc.fillText('   一旦后验概率低于阈值，立刻果断止损，主攻毕业与实习。', cardX + 650, cardY + 448);
+
+  scc.restore();
+}
+
+/* 5. 哲学金句与认知收敛 (72.0s - 80.0s) */
+function drawPhilosophyOutro(t){
+  const cardX = 360, cardY = 180, cardW = 1200, cardH = 500;
+  const localT = clamp((t - 72.0) / 2.0, 0, 1);
+
+  scc.save();
+  scc.fillStyle = 'rgba(12, 10, 22, 0.96)';
+  scc.strokeStyle = '#C9A96A'; scc.lineWidth = 3;
+  roundRect(scc, cardX, cardY, cardW, cardH, 24);
+  scc.fill(); scc.stroke();
+
+  // 金色粒子收敛
+  scc.textAlign = 'center';
+  scc.fillStyle = '#C9A96A';
+  scc.font = "700 26px 'Noto Sans SC', sans-serif";
+  scc.fillText('— VIBE 知识大赏 · 认知终局审视 —', cardX + cardW/2, cardY + 80);
+
+  scc.fillStyle = '#EDE4D3';
+  scc.font = "900 40px 'Noto Serif SC', serif";
+  scc.fillText('“所有无需抵押的远期前途，”', cardX + cardW/2, cardY + 180);
+  scc.fillText('“本质上都是在向你的年轻无息借贷。”', cardX + cardW/2, cardY + 250);
+
+  scc.fillStyle = '#4EE1A0';
+  scc.font = "700 34px 'Noto Serif SC', serif";
+  scc.fillText('真正的尊重，始于对沉没成本的清醒止损。', cardX + cardW/2, cardY + 350);
+
+  scc.fillStyle = 'rgba(160, 160, 186, 0.7)';
+  scc.font = "italic 400 20px 'EB Garamond', serif";
+  scc.fillText('Game Theory of Academic Promises · Self-Sovereignty and Sunk Cost Boundaries', cardX + cardW/2, cardY + 420);
+
+  scc.restore();
+}
+
+/* ================= 核心时间驱动契约 window.render(t) ================= */
+window.render = function(t){
+  // 1. 约束时间范围
+  t = clamp(t, 0, CFG.duration);
+
+  // 2. 背景与场景主动效绘制
+  drawBackground(t);
+  drawScene(t);
+
+  // 3. 顶部场景/阶段标签与学术注释更新
+  const isTitle = t >= TITLE_CARD[0] && t < TITLE_CARD[1];
+  let activeSection = null;
+  for (let i = SECTIONS.length - 1; i >= 0; i--){
+    if (t >= SECTIONS[i][0]) { activeSection = SECTIONS[i]; break; }
+  }
+  const topEl = document.getElementById('toplabel');
+  if (topEl) {
+    topEl.style.display = isTitle ? 'none' : 'block';
+    if (activeSection) topEl.textContent = activeSection[1];
+  }
+
+  // 4. 学术注释 (y ≈ 765px)
+  const annoEl = document.getElementById('annotation');
+  if (annoEl) {
+    annoEl.style.display = isTitle ? 'none' : 'block';
+    if (activeSection) annoEl.textContent = activeSection[2] || '';
+  }
+
+  // 5. 标题卡控制 (13.5s - 19.5s)
+  const titleEl = document.getElementById('titlecard');
+  if (titleEl) {
+    if (t >= TITLE_CARD[0] && t < TITLE_CARD[1]) {
+      titleEl.style.display = 'flex';
+      titleEl.style.opacity = '1';
+    } else {
+      titleEl.style.display = 'none';
+      titleEl.style.opacity = '0';
+    }
+  }
+
+  // 6. 双语胶囊字幕更新
+  let activeSub = null;
+  for (let s of SUBTITLES){
+    if (t >= s[0] && t < s[1]) { activeSub = s; break; }
+  }
+  const pillEl = document.getElementById('sub-pill');
+  const subEl = document.getElementById('subtitle');
+  const subEnEl = document.getElementById('subtitle-en');
+  if (activeSub && (t < TITLE_CARD[0] || t >= TITLE_CARD[1])) {
+    if (pillEl) pillEl.style.opacity = '1';
+    if (subEl) subEl.innerHTML = activeSub[2];
+    if (subEnEl) subEnEl.textContent = activeSub[3];
+  } else {
+    if (pillEl) pillEl.style.opacity = '0';
+  }
+
+  // 7. 水印透明度与显示
+  const wmEl = document.getElementById('watermark');
+  if (wmEl) {
+    const wm = (typeof CFG !== 'undefined' && CFG.watermark) ? CFG.watermark : '';
+    wmEl.textContent = wm;
+    wmEl.style.display = wm ? 'block' : 'none';
+    wmEl.style.opacity = t < 1.0 ? t : 1.0;
+  }
+};
+
+/* ================= 浏览器原生交互与播放控制器 ================= */
+let isPlaying = false;
+let playStartTime = 0;
+let playStartOffset = 0;
+const bgm = document.getElementById('bgm');
+const btnPlay = document.getElementById('btn-play');
+const timeline = document.getElementById('timeline');
+const timeDisp = document.getElementById('time-display');
+
+function formatTime(sec){
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateTimelineUI(t){
+  if (timeline) timeline.value = t;
+  if (timeDisp) timeDisp.textContent = `${formatTime(t)} / ${formatTime(CFG.duration)}`;
+}
+
+function seek(t){
+  t = clamp(t, 0, CFG.duration);
+  playStartOffset = t;
+  playStartTime = performance.now();
+  if (bgm) {
+    bgm.currentTime = t;
+  }
+  window.render(t);
+  updateTimelineUI(t);
+}
+
+if (timeline) {
+  timeline.addEventListener('input', (e) => {
+    seek(parseFloat(e.target.value));
+  });
+}
+
+if (btnPlay) {
+  btnPlay.addEventListener('click', () => {
+    if (!isPlaying) {
+      isPlaying = true;
+      btnPlay.textContent = '❚❚ 暂停';
+      playStartTime = performance.now();
+      if (bgm) bgm.play().catch(()=>{});
+      requestAnimationFrame(tick);
+    } else {
+      isPlaying = false;
+      btnPlay.textContent = '▶ 播放';
+      if (bgm) bgm.pause();
+    }
+  });
+}
+
+function tick(now){
+  if (!isPlaying) return;
+  const elapsed = (now - playStartTime) / 1000;
+  const t = playStartOffset + elapsed;
+  if (t >= CFG.duration) {
+    seek(CFG.duration);
+    isPlaying = false;
+    btnPlay.textContent = '▶ 播放';
+    return;
+  }
+  window.render(t);
+  updateTimelineUI(t);
+  requestAnimationFrame(tick);
+}
+
+// 初始化渲染第一帧
+window.render(0);
+updateTimelineUI(0);
+
+// 如果处于录屏渲染模式 (__RENDER_MODE__ = true)，隐藏控制栏
+if (window.__RENDER_MODE__) {
+  const ctrl = document.getElementById('player-controls');
+  if (ctrl) ctrl.style.display = 'none';
+}
+</script>
+</body>
+</html>

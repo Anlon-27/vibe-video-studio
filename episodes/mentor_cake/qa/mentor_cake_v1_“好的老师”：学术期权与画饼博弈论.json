@@ -1,0 +1,34 @@
+{
+  "video": "C:\\Users\\Administrator\\Desktop\\项目\\ai-video-studio\\episodes\\mentor_cake\\dist\\mentor_cake_v1_“好的老师”：学术期权与画饼博弈论.mp4",
+  "checkedAt": "2026-10-26T16:04:16+08:00",
+  "spec": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30",
+    "duration": 80.0,
+    "hasAudio": true
+  },
+  "visual": {
+    "darkRatio": 0.9495065586419752,
+    "subtitleBandRate": 0.875,
+    "changeMean": 2.410812691252506,
+    "samples": 40
+  },
+  "subtitle": {
+    "ocrChecked": 0,
+    "ocrRead": 0,
+    "skipped": true,
+    "reason": "tesseract 未安装，OCR 项跳过"
+  },
+  "audio": {
+    "peak": 0.9090172052383423,
+    "rms": 0.1769619584083557,
+    "clipRatio": 0.0
+  },
+  "issues": [
+    "[规格] 时长 80s 超出 2:30-2:50 区间",
+    "[节奏] 相邻 2 秒帧差异过低——存在长时间静止画面（规范: 每 2-4 秒必须有新元素）",
+    "[节奏] 静止段过多: [0, 4, 8, 14, 16, 20, 28, 34]...（时间点/秒）"
+  ],
+  "passed": false
+}

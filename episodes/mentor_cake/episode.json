@@ -1,0 +1,15 @@
+{
+  "slug": "mentor_cake",
+  "title": "“好的老师”：学术期权与画饼博弈论",
+  "version": 1,
+  "status": "active",
+  "duration": 80.0,
+  "fps": 30,
+  "template": "episodes/mentor_cake/index.html",
+  "publishDoc": "publish/douyin/mentor_cake.md",
+  "bgm": "episodes/mentor_cake/assets/master_soundtrack.wav",
+  "sfx": null,
+  "supersedes": null,
+  "supersededBy": null,
+  "createdAt": "2026-10-26"
+}
